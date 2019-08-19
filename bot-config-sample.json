@@ -1,5 +1,8 @@
 {
     "discord": {
         "token": "<BOT-TOKEN-HERE>"
+    },
+    "station": {
+        "token": "<STATION-USER-TOKEN-HERE>"
     }
 }
