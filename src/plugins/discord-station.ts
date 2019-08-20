@@ -1,4 +1,3 @@
-
 import { ParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { secondsToTimestamp } from '../bot';
@@ -11,8 +10,8 @@ import * as BPromise from "bluebird"
 import axios from "axios"
 import { encode } from 'punycode';
 
-const botConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "..", "bot-config.json"), "utf8"));
 const stationConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "..", "..", "..", "config", "app.config.json"), "utf8"));
+
 const stationType: string = 'station';
 let searchIds = []
 let prevPageURL = "";
@@ -52,7 +51,7 @@ export default class YoutubePlugin implements IBotPlugin {
         bot.commands.on("random", (cmd: ParsedMessage, msg: Message) => {
             if (cmd.arguments.length <= 1) {
                 const count: number = cmd.arguments[0] === undefined ? 10 : Number(cmd.arguments[0]);
-                axios(`http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}`).then(x => x.data).then(resp => {
+                axios(`http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${bot.config.station.token}`).then(x => x.data).then(resp => {
                     resp.songs.map((x: any, i: number) => {
                         player.addMedia({ type: stationType, url: x.id, requestor: msg.author.username });
                     });
@@ -94,7 +93,7 @@ export default class YoutubePlugin implements IBotPlugin {
                     })
                     return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
                 }).join("\n") + "```").then(() => {
-                    return msg.channel.send(["if you want to check next page, type $next, and if previous, type $prev", "To select song, type `$select number`"]);
+                    return msg.channel.send(["if you want to check next page, type " + bot.config.command.symbol + "next, and if previous, type " + bot.config.command.symbol + "prev", "To select song, type `" + bot.config.command.symbol + "select number`"]);
                 });;
             })
         });
@@ -111,7 +110,7 @@ export default class YoutubePlugin implements IBotPlugin {
                     })
                     return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
                 }).join("\n") + "```").then(() => {
-                    return msg.channel.send(["if you want to check next page, type $next, and if previous, type $prev", "To select song, type `$select number`"]);
+                    return msg.channel.send(["if you want to check next page, type " + bot.config.command.symbol + "next, and if previous, type " + bot.config.command.symbol + "prev", "To select song, type `" + bot.config.command.symbol + "select number`"]);
                 });
             })
         });
@@ -120,7 +119,7 @@ export default class YoutubePlugin implements IBotPlugin {
             if (cmd.arguments.length > 0) {
                 const searchWords = cmd.arguments.join(" ")
                 msg.channel.send(`Search this words: "${searchWords}"`);
-                pageURL = `http://localhost:${stationConfig.PORT}/api/v1/song?q=${encodeURIComponent(searchWords)}&count=10&token=${botConfig.station.token}`;
+                pageURL = `http://localhost:${stationConfig.PORT}/api/v1/song?q=${encodeURIComponent(searchWords)}&count=10&token=${bot.config.station.token}`;
                 axios(pageURL).then(x => x.data).then(resp => {
                     searchIds = [];
                     prevPageURL = `${pageURL}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
@@ -132,7 +131,7 @@ export default class YoutubePlugin implements IBotPlugin {
                         })
                         return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
                     }).join("\n") + "```").then(() => {
-                        return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
+                        return msg.channel.send(["if you want to check next page, type " + bot.config.command.symbol + "next, and if previous, type " + bot.config.command.symbol + "prev", "To select song, type `" + bot.config.command.symbol + "select number`"]);
                     });
                 })
             }
@@ -142,7 +141,7 @@ export default class YoutubePlugin implements IBotPlugin {
             stationType,
             {
                 getDetails: (item: MediaItem) => new Promise(async (done, error) => {
-                    const name: string = await axios(`http://localhost:${stationConfig.PORT}/api/v1/song/meta/${item.url}?&token=${botConfig.station.token}`).then(x => x.data).then(resp => {
+                    const name: string = await axios(`http://localhost:${stationConfig.PORT}/api/v1/song/meta/${item.url}?&token=${bot.config.station.token}`).then(x => x.data).then(resp => {
                         return `${resp.data.title} - ${resp.data.album} - ${resp.data.artist}`
                     })
                     item.url = `http://localhost:${stationConfig.PORT}/api/v1/song/${item.url}`;
@@ -151,7 +150,7 @@ export default class YoutubePlugin implements IBotPlugin {
                     done(item)
                 }),
                 getStream: (item: MediaItem) => new Promise((done, error) => {
-                    done(request(item.url + "?token=" + botConfig.station.token));
+                    done(request(item.url + "?token=" + bot.config.station.token));
                 })
             }
         );

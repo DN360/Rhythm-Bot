@@ -13,6 +13,9 @@ export interface BotConfig {
         token: string;
         log?: boolean;
     },
+    station: {
+        token: string;
+    },
     queue?: {
         announce?: boolean;
         repeat?: boolean;
@@ -36,8 +39,11 @@ export const DefaultBotConfig: BotConfig = {
         token: '',
         log: true
     },
+    station: {
+        token: ''
+    },
     command: {
-        symbol: '$'
+        symbol: '!'
     },
     queue: {
         announce: true,
@@ -45,7 +51,7 @@ export const DefaultBotConfig: BotConfig = {
     },
     stream: {
         seek: 0,
-        passes: 3, 
+        passes: 3,
         volume: 1,
         bitrate: 'auto'
     }
