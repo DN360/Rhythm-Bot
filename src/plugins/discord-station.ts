@@ -63,7 +63,7 @@ export default class YoutubePlugin implements IBotPlugin {
         bot.commands.on("select", (cmd: ParsedMessage, msg: Message) => {
             if (cmd.arguments.length > 0) {
                 BPromise.map(cmd.arguments, arg => {
-                    return player.addMedia({ type: stationType, url: searchIds.find(x => x.number === arg).id, requestor: msg.author.username });
+                    return player.addMedia({ type: stationType, url: searchIds.find(x => x.number === Number(arg)).id, requestor: msg.author.username });
                 }, { concurrency: 1 }).then(() => {
                     return new Promise(done => {
                         if (!player.connection) {
@@ -92,9 +92,9 @@ export default class YoutubePlugin implements IBotPlugin {
                         number: i + 1,
                         id: x.id
                     })
-                    return `${i + 1}: ID: ${x.id}, ${x.title} - ${x.album} - ${x.artist}`
+                    return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
                 })).then(() => {
-                    return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
+                    return msg.channel.send(["if you want to check next page, type $next, and if previous, type $prev", "To select song, type `$select number`"]);
                 });;
             })
         });
@@ -109,9 +109,9 @@ export default class YoutubePlugin implements IBotPlugin {
                         number: i + 1,
                         id: x.id
                     })
-                    return `${i + 1}: ID: ${x.id}, ${x.title} - ${x.album} - ${x.artist}`
+                    return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
                 })).then(() => {
-                    return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
+                    return msg.channel.send(["if you want to check next page, type $next, and if previous, type $prev", "To select song, type `$select number`"]);
                 });
             })
         });
@@ -130,7 +130,7 @@ export default class YoutubePlugin implements IBotPlugin {
                             number: i + 1,
                             id: x.id
                         })
-                        return `${i + 1}: ID: ${x.id}, ${x.title} - ${x.album} - ${x.artist}`
+                        return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
                     })).then(() => {
                         return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
                     });
