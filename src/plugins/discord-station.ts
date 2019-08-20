@@ -29,9 +29,7 @@ export default class YoutubePlugin implements IBotPlugin {
             if (cmd.arguments.length > 0) {
                 BPromise.map(cmd.arguments, arg => {
                     return player.addMedia({ type: stationType, url: arg, requestor: msg.author.username });
-                }, { concurrency: 1 }).then(() => {
-                    player.play();
-                })
+                }, { concurrency: 1 })
             }
         });
 
@@ -50,9 +48,7 @@ export default class YoutubePlugin implements IBotPlugin {
             if (cmd.arguments.length > 0) {
                 BPromise.map(cmd.arguments, arg => {
                     return player.addMedia({ type: stationType, url: searchIds.find(x => x.number === Number(arg)).id, requestor: msg.author.username });
-                }, { concurrency: 1 }).then(() => {
-                    player.play();
-                })
+                }, { concurrency: 1 })
             }
         });
 
