@@ -87,13 +87,13 @@ export default class YoutubePlugin implements IBotPlugin {
                 searchIds = [];
                 prevPageURL = `${pageURL}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
                 nextPageURL = `${pageURL}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
-                msg.channel.send(resp.songs.map((x: any, i: number) => {
+                msg.channel.send("```" + resp.songs.map((x: any, i: number) => {
                     searchIds.push({
                         number: i + 1,
                         id: x.id
                     })
                     return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
-                })).then(() => {
+                }).join("\n") + "```").then(() => {
                     return msg.channel.send(["if you want to check next page, type $next, and if previous, type $prev", "To select song, type `$select number`"]);
                 });;
             })
@@ -104,13 +104,13 @@ export default class YoutubePlugin implements IBotPlugin {
                 searchIds = [];
                 prevPageURL = `${pageURL}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
                 nextPageURL = `${pageURL}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
-                msg.channel.send(resp.songs.map((x: any, i: number) => {
+                msg.channel.send("```" + resp.songs.map((x: any, i: number) => {
                     searchIds.push({
                         number: i + 1,
                         id: x.id
                     })
                     return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
-                })).then(() => {
+                }).join("\n") + "```").then(() => {
                     return msg.channel.send(["if you want to check next page, type $next, and if previous, type $prev", "To select song, type `$select number`"]);
                 });
             })
@@ -125,13 +125,13 @@ export default class YoutubePlugin implements IBotPlugin {
                     searchIds = [];
                     prevPageURL = `${pageURL}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
                     nextPageURL = `${pageURL}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
-                    msg.channel.send(resp.songs.map((x: any, i: number) => {
+                    msg.channel.send("```" + resp.songs.map((x: any, i: number) => {
                         searchIds.push({
                             number: i + 1,
                             id: x.id
                         })
                         return `${i + 1}: ${x.title} - ${x.album} - ${x.artist}, ID: ${x.id}`
-                    })).then(() => {
+                    }).join("\n") + "```").then(() => {
                         return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
                     });
                 })
