@@ -2,10 +2,12 @@
 import { ParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { secondsToTimestamp } from '../bot';
+import { joinUserChannel } from '../bot/helpers';
 import { IBot, IBotPlugin, MediaItem } from '../resources';
 import * as fs from "fs"
 import * as request from "request"
 import * as path from "path"
+import * as BPromise from "bluebird"
 import axios from "axios"
 import { encode } from 'punycode';
 
@@ -23,9 +25,23 @@ export default class YoutubePlugin implements IBotPlugin {
 
         bot.commands.on(stationType, (cmd: ParsedMessage, msg: Message) => {
             if (cmd.arguments.length > 0) {
-                cmd.arguments.forEach(arg => {
-                    player.addMedia({ type: stationType, url: arg, requestor: msg.author.username });
-                });
+                BPromise.map(cmd.arguments, arg => {
+                    return player.addMedia({ type: stationType, url: arg, requestor: msg.author.username });
+                }, { concurrency: 1 }).then(() => {
+                    return new Promise(done => {
+                        if (!player.connection) {
+                            joinUserChannel(msg)
+                                .then(conn => {
+                                    player.connection = conn;
+                                    msg.channel.send(`:speaking_head: Joined channel: ${conn.channel.name}`);
+                                    done();
+                                });
+                        } else
+                            done();
+                    }).then(() => {
+                        player.play();
+                    });
+                })
             }
         });
 
