@@ -17,6 +17,7 @@ const stationType: string = 'station';
 let searchIds = []
 let prevPageURL = "";
 let nextPageURL = "";
+let pageURL = "";
 
 export default class YoutubePlugin implements IBotPlugin {
 
@@ -84,8 +85,8 @@ export default class YoutubePlugin implements IBotPlugin {
         bot.commands.on("prev", (cmd: ParsedMessage, msg: Message) => {
             axios(prevPageURL).then(x => x.data).then(resp => {
                 searchIds = [];
-                prevPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
-                nextPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
+                prevPageURL = `${pageURL}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
+                nextPageURL = `${pageURL}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
                 msg.channel.send(resp.songs.map((x: any, i: number) => {
                     searchIds.push({
                         number: i + 1,
@@ -101,8 +102,8 @@ export default class YoutubePlugin implements IBotPlugin {
         bot.commands.on("next", (cmd: ParsedMessage, msg: Message) => {
             axios(nextPageURL).then(x => x.data).then(resp => {
                 searchIds = [];
-                prevPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
-                nextPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
+                prevPageURL = `${pageURL}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
+                nextPageURL = `${pageURL}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
                 msg.channel.send(resp.songs.map((x: any, i: number) => {
                     searchIds.push({
                         number: i + 1,
@@ -119,10 +120,11 @@ export default class YoutubePlugin implements IBotPlugin {
             if (cmd.arguments.length > 0) {
                 const searchWords = cmd.arguments.join(" ")
                 msg.channel.send(`Search this words: "${searchWords}"`);
-                axios(`http://localhost:${stationConfig.PORT}/api/v1/song?q=${encodeURIComponent(searchWords)}&count=10&token=${botConfig.station.token}`).then(x => x.data).then(resp => {
+                pageURL = `http://localhost:${stationConfig.PORT}/api/v1/song?q=${encodeURIComponent(searchWords)}&count=10&token=${botConfig.station.token}`;
+                axios(pageURL).then(x => x.data).then(resp => {
                     searchIds = [];
-                    prevPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
-                    nextPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
+                    prevPageURL = `${pageURL}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
+                    nextPageURL = `${pageURL}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
                     msg.channel.send(resp.songs.map((x: any, i: number) => {
                         searchIds.push({
                             number: i + 1,
