@@ -1,7 +1,6 @@
 import { ParsedMessage } from 'discord-command-parser';
 import { Message } from 'discord.js';
 import { secondsToTimestamp } from '../bot';
-import { joinUserChannel } from '../bot/helpers';
 import { IBot, IBotPlugin, MediaItem } from '../resources';
 import * as fs from "fs"
 import * as request from "request"
@@ -31,19 +30,7 @@ export default class YoutubePlugin implements IBotPlugin {
                 BPromise.map(cmd.arguments, arg => {
                     return player.addMedia({ type: stationType, url: arg, requestor: msg.author.username });
                 }, { concurrency: 1 }).then(() => {
-                    return new Promise(done => {
-                        if (!player.connection) {
-                            joinUserChannel(msg)
-                                .then(conn => {
-                                    player.connection = conn;
-                                    msg.channel.send(`:speaking_head: Joined channel: ${conn.channel.name}`);
-                                    done();
-                                });
-                        } else
-                            done();
-                    }).then(() => {
-                        player.play();
-                    });
+                    player.play();
                 })
             }
         });
@@ -64,19 +51,7 @@ export default class YoutubePlugin implements IBotPlugin {
                 BPromise.map(cmd.arguments, arg => {
                     return player.addMedia({ type: stationType, url: searchIds.find(x => x.number === Number(arg)).id, requestor: msg.author.username });
                 }, { concurrency: 1 }).then(() => {
-                    return new Promise(done => {
-                        if (!player.connection) {
-                            joinUserChannel(msg)
-                                .then(conn => {
-                                    player.connection = conn;
-                                    msg.channel.send(`:speaking_head: Joined channel: ${conn.channel.name}`);
-                                    done();
-                                });
-                        } else
-                            done();
-                    }).then(() => {
-                        player.play();
-                    });
+                    player.play();
                 })
             }
         });
