@@ -14,6 +14,9 @@ import { encode } from 'punycode';
 const botConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "..", "bot-config.json"), "utf8"));
 const stationConfig = JSON.parse(fs.readFileSync(path.resolve(__dirname, "..", "..", "..", "..", "config", "app.config.json"), "utf8"));
 const stationType: string = 'station';
+let searchIds = []
+let prevPageURL = "";
+let nextPageURL = "";
 
 export default class YoutubePlugin implements IBotPlugin {
 
@@ -56,14 +59,79 @@ export default class YoutubePlugin implements IBotPlugin {
             }
         });
 
+        bot.commands.on("select", (cmd: ParsedMessage, msg: Message) => {
+            if (cmd.arguments.length > 0) {
+                BPromise.map(cmd.arguments, arg => {
+                    return player.addMedia({ type: stationType, url: searchIds.find(x => x.number === arg).id, requestor: msg.author.username });
+                }, { concurrency: 1 }).then(() => {
+                    return new Promise(done => {
+                        if (!player.connection) {
+                            joinUserChannel(msg)
+                                .then(conn => {
+                                    player.connection = conn;
+                                    msg.channel.send(`:speaking_head: Joined channel: ${conn.channel.name}`);
+                                    done();
+                                });
+                        } else
+                            done();
+                    }).then(() => {
+                        player.play();
+                    });
+                })
+            }
+        });
+
+        bot.commands.on("prev", (cmd: ParsedMessage, msg: Message) => {
+            axios(prevPageURL).then(x => x.data).then(resp => {
+                searchIds = [];
+                prevPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
+                nextPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
+                msg.channel.send(resp.songs.map((x: any, i: number) => {
+                    searchIds.push({
+                        number: i + 1,
+                        id: x.id
+                    })
+                    return `${i + 1}: ID: ${x.id}, ${x.title} - ${x.album} - ${x.artist}`
+                })).then(() => {
+                    return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
+                });;
+            })
+        });
+
+        bot.commands.on("next", (cmd: ParsedMessage, msg: Message) => {
+            axios(nextPageURL).then(x => x.data).then(resp => {
+                searchIds = [];
+                prevPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
+                nextPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
+                msg.channel.send(resp.songs.map((x: any, i: number) => {
+                    searchIds.push({
+                        number: i + 1,
+                        id: x.id
+                    })
+                    return `${i + 1}: ID: ${x.id}, ${x.title} - ${x.album} - ${x.artist}`
+                })).then(() => {
+                    return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
+                });
+            })
+        });
+
         bot.commands.on("search", (cmd: ParsedMessage, msg: Message) => {
             if (cmd.arguments.length > 0) {
                 const searchWords = cmd.arguments.join(" ")
                 msg.channel.send(`Search this words: "${searchWords}"`);
                 axios(`http://localhost:${stationConfig.PORT}/api/v1/song?q=${encodeURIComponent(searchWords)}&count=10&token=${botConfig.station.token}`).then(x => x.data).then(resp => {
+                    searchIds = [];
+                    prevPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.prevPage === null ? "" : "&page=" + resp.pages.prevPage}`;
+                    nextPageURL = `http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${botConfig.station.token}${resp.pages.nextPage === null ? "" : "&page=" + resp.pages.nextPage}`;
                     msg.channel.send(resp.songs.map((x: any, i: number) => {
+                        searchIds.push({
+                            number: i + 1,
+                            id: x.id
+                        })
                         return `${i + 1}: ID: ${x.id}, ${x.title} - ${x.album} - ${x.artist}`
-                    }));
+                    })).then(() => {
+                        return msg.channel.send("if you want to check next page, type $next, and if previous, type $prev");
+                    });
                 })
             }
         });
@@ -81,7 +149,6 @@ export default class YoutubePlugin implements IBotPlugin {
                     done(item)
                 }),
                 getStream: (item: MediaItem) => new Promise((done, error) => {
-                    console.log(item.url + "?token=" + botConfig.station.token);
                     done(request(item.url + "?token=" + botConfig.station.token));
                 })
             }
