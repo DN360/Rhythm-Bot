@@ -17,7 +17,16 @@ let prevPageURL = "";
 let nextPageURL = "";
 let pageURL = "";
 
-export default class YoutubePlugin implements IBotPlugin {
+export const getRandomURL = async (count: number, token: string) => {
+    const list = axios(`http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${token}`).then(x => x.data).then(resp => {
+        return (resp.songs as any[]).map((x: { id: string }, i: number) => {
+            return x.id
+        });
+    })
+    return list
+}
+
+export default class StationPlugin implements IBotPlugin {
 
     preInitialize(bot: IBot): void {
         bot.helptext += '\n`station [id]` - Add station audio to the queue\n'
@@ -36,11 +45,19 @@ export default class YoutubePlugin implements IBotPlugin {
         bot.commands.on("random", (cmd: ParsedMessage, msg: Message) => {
             if (cmd.arguments.length <= 1) {
                 const count: number = cmd.arguments[0] === undefined ? 10 : Number(cmd.arguments[0]);
-                axios(`http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${bot.config.station.token}`).then(x => x.data).then(resp => {
-                    resp.songs.map((x: any, i: number) => {
-                        player.addMedia({ type: stationType, url: x.id, requestor: msg.author.username });
-                    });
+                getRandomURL(count, bot.config.station.token).then(urls => {
+                    urls.map(url => {
+                        player.addMedia({ type: stationType, url, requestor: msg.author.username });
+                    })
                 })
+            }
+        });
+
+        bot.commands.on("toggle", (cmd: ParsedMessage, msg: Message) => {
+            if (cmd.arguments.length <= 1) {
+                const autoAddRandomStation = player.autoAddRandom.get(stationType) || false
+                player.autoAddRandom.set(stationType, !autoAddRandomStation)
+                return msg.channel.send(`Auto random addition mode is changed to ${autoAddRandomStation ? "on" : "off"}!`);
             }
         });
 
@@ -125,6 +142,14 @@ export default class YoutubePlugin implements IBotPlugin {
                 })
             }
         );
+
+        player.autoURLtoggleFunctions.set(stationType, async () => {
+            const urls = await getRandomURL(1, bot.config.station.token)
+            if (urls === undefined || urls.length === 0) {
+                return null
+            }
+            return urls[0]
+        })
     }
 
     postInitialize(bot: IBot): void {
