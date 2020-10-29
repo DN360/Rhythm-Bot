@@ -156,7 +156,7 @@ export class MediaPlayer {
                 //Add random from station
                 this.autoURLtoggleFunctions.get("station")().then(randomItem => {
                     if (randomItem === null) return;
-                    this.addMedia({
+                    this.queue.enqueue({
                         type: "station",
                         url: randomItem,
                         requestor: "Auto addition by bot"
