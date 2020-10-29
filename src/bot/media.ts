@@ -71,7 +71,13 @@ export class MediaQueue extends Array<MediaItem> {
 
 export class MediaPlayer {
     typeRegistry: Map<string, IMediaType> = new Map<string, IMediaType>();
-    autoURLtoggleFunctions?: Map<string, () => Promise<string>> = new Map<string, () => Promise<string>>();
+    autoURLtoggleFunctions?: Map<string, () => Promise<{
+        url: string,
+        name: string
+    }>> = new Map<string, () => Promise<{
+        url: string,
+        name: string
+    }>>();
     queue: MediaQueue = new MediaQueue();
     playing: boolean = false;
     paused: boolean = false;
@@ -156,9 +162,11 @@ export class MediaPlayer {
                 //Add random from station
                 this.autoURLtoggleFunctions.get("station")().then(randomItem => {
                     if (randomItem === null) return;
+                    console.debug(randomItem)
                     this.queue.enqueue({
                         type: "station",
-                        url: randomItem,
+                        url: randomItem.url,
+                        name: randomItem.name || "no name!?",
                         requestor: "Auto addition by bot"
                     })
                 })

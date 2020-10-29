@@ -17,13 +17,20 @@ let prevPageURL = "";
 let nextPageURL = "";
 let pageURL = "";
 
-export const getRandomURL = async (count: number, token: string) => {
+export const getRandomId = async (count: number, token: string) => {
     const list = axios(`http://localhost:${stationConfig.PORT}/api/v1/song/random/list?count=${count}&token=${token}`).then(x => x.data).then(resp => {
         return (resp.songs as any[]).map((x: { id: string }, i: number) => {
             return x.id
         });
     })
     return list
+}
+
+export const getNameFromId = async (id: string, token: string) => {
+    const name: string = await axios(`http://localhost:${stationConfig.PORT}/api/v1/song/meta/${id}?&token=${token}`).then(x => x.data).then(resp => {
+        return `${resp.data.title} - ${resp.data.album} - ${resp.data.artist}`
+    })
+    return name
 }
 
 export default class StationPlugin implements IBotPlugin {
@@ -45,7 +52,7 @@ export default class StationPlugin implements IBotPlugin {
         bot.commands.on("random", (cmd: ParsedMessage, msg: Message) => {
             if (cmd.arguments.length <= 1) {
                 const count: number = cmd.arguments[0] === undefined ? 10 : Number(cmd.arguments[0]);
-                getRandomURL(count, bot.config.station.token).then(urls => {
+                getRandomId(count, bot.config.station.token).then(urls => {
                     urls.map(url => {
                         player.addMedia({ type: stationType, url, requestor: msg.author.username });
                     })
@@ -57,7 +64,7 @@ export default class StationPlugin implements IBotPlugin {
             if (cmd.arguments.length <= 1) {
                 const autoAddRandomStation = player.autoAddRandom.get(stationType) || false
                 player.autoAddRandom.set(stationType, !autoAddRandomStation)
-                return msg.channel.send(`Auto random addition mode is changed to ${autoAddRandomStation ? "on" : "off"}!`);
+                return msg.channel.send(`Auto random addition mode is changed to ${player.autoAddRandom.get(stationType) ? "on" : "off"}!`);
             }
         });
 
@@ -144,11 +151,14 @@ export default class StationPlugin implements IBotPlugin {
         );
 
         player.autoURLtoggleFunctions.set(stationType, async () => {
-            const urls = await getRandomURL(1, bot.config.station.token)
-            if (urls === undefined || urls.length === 0) {
+            const ids = await getRandomId(1, bot.config.station.token)
+            if (ids === undefined || ids.length === 0) {
                 return null
             }
-            return urls[0]
+            return {
+                url: `http://localhost:${stationConfig.PORT}/api/v1/song/${ids[0]}`,
+                name: await getNameFromId(ids[0], bot.config.station.token)
+            }
         })
     }
 

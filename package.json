@@ -20,6 +20,7 @@
     "discord-command-parser": "^1.2.1",
     "discord.js": "^11.5.1",
     "jsonfile": "^2.4.0",
+    "m3u8stream": "^0.6.3",
     "minimist": "^1.2.0",
     "moment": "^2.24.0",
     "node-opus": "^0.3.2",
@@ -27,6 +28,6 @@
     "request": "^2.88.0",
     "typescript": "^3.5.1",
     "winston": "^3.2.1",
-    "ytdl-core": "^0.29.4"
+    "ytdl-core": "^2.0.1"
   }
 }
